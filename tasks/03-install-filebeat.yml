@@ -1,0 +1,33 @@
+#-------------------------- Installing filebeat ------------------------------
+- name: check filebeat installed or no
+  stat: path=/etc/filebeat/
+  register: filebeat
+
+- debug: msg="filebeat found, skip to next process"
+  when: filebeat.stat.exists == True
+
+- debug: msg="filebeat not found, prepare to install"
+  when: filebeat.stat.exists == False
+
+- block:
+  - name: download filebeat from *.deb package
+    register: result
+    get_url:
+      url="https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-6.2.2-amd64.deb"
+      dest="/tmp/"
+
+  - name: install it
+    apt: deb="/tmp/filebeat-6.2.2-amd64.deb" state="present"
+
+- name: Copy all configuration for filebeat and load templates to filebeat
+  template:
+    src: templates/filebeat.yml.j2
+    dest: /etc/filebeat/filebeat.yml
+
+- name: load template
+  command: "{{item}}"
+  with_items:
+    - filebeat setup --template -E output.logstash.enabled=false -E 'output.filebeat.hosts=["{{elk_host}}:9200"]'
+    - filebeat setup --dashboards
+    - systemctl enable filebeat
+    - systemctl start filebeat

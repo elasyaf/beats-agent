@@ -1,0 +1,3 @@
+- import_tasks: 01-install-metricbeat.yml
+- import_tasks: 02-install-packetbeat.yml
+- import_tasks: 03-install-filebeat.yml

@@ -1,0 +1,33 @@
+#-------------------------- Installing packetbeat ------------------------------
+- name: check packetbeat installed or no
+  stat: path=/etc/packetbeat/
+  register: packetbeat
+
+- debug: msg="packetbeat found, skip to next process"
+  when: packetbeat.stat.exists == True
+
+- debug: msg="packetbeat not found, prepare to install"
+  when: packetbeat.stat.exists == False
+
+- block:
+  - name: download packetbeat from *.deb package
+    register: result
+    get_url:
+      url="https://artifacts.elastic.co/downloads/beats/packetbeat/packetbeat-6.2.2-amd64.deb"
+      dest="/tmp/"
+
+  - name: install it
+    apt: deb="/tmp/packetbeat-6.2.2-amd64.deb" state="present"
+
+- name: Copy all configuration for packetbeat and load templates to packetbeat
+  template:
+    src: templates/packetbeat.yml.j2
+    dest: /etc/packetbeat/packetbeat.yml
+
+- name: load template
+  command: "{{item}}"
+  with_items:
+    - packetbeat setup --template -E output.logstash.enabled=false -E 'output.packetbeat.hosts=["{{elk_host}}:9200"]'
+    - packetbeat setup --dashboards
+    - systemctl enable packetbeat
+    - systemctl start packetbeat

@@ -1,0 +1,34 @@
+#-------------------------- Installing metricbeat ------------------------------
+- name: check metricbeat installed or not
+  stat: path=/etc/metricbeat/
+  register: metricbeat
+
+- debug: msg="Metricbeat found, skip to next process"
+  when: metricbeat.stat.exists == True
+
+- debug: msg="Metricbeat not found, prepare to install"
+  when: metricbeat.stat.exists == False
+
+
+- block:
+  - name: download metricbeat from *.deb package
+    register: result
+    get_url:
+      url="https://artifacts.elastic.co/downloads/beats/metricbeat/metricbeat-6.2.2-amd64.deb"
+      dest="/tmp/"
+
+  - name: install it
+    apt: deb="/tmp/metricbeat-6.2.2-amd64.deb" state="present"
+
+- name: Copy all configuration for metricbeat and load templates to metricbeat
+  template:
+    src: templates/metricbeat.yml.j2
+    dest: /etc/metricbeat/metricbeat.yml
+
+- name: load template
+  command: "{{item}}"
+  with_items:
+    - metricbeat setup --template -E output.logstash.enabled=false -E 'output.metricbeat.hosts=["{{elk_host}}:9200"]'
+    - metricbeat setup --dashboards
+    - systemctl enable metricbeat
+    - systemctl start metricbeat
