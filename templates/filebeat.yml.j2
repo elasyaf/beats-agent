@@ -1,19 +1,17 @@
 ---
 filebeat.prospectors:
-  - type: log
-    enabled: true
-    paths:
-      - /var/log/*.log
-      - /var/log/*/*.log
+- input_type: log
+  paths:
+    - /var/log/*.log
+  document_type: syslog
+  registry: /var/lib/filebeat/registry
 
 output:
   elasticsearch:
-    hosts: ["{{elasticsearch_hosts}}:9200"]
+    hosts: ["{{elk_hosts}}:9200"]
+    setup.template.name: "filebeat"
+    setup.template.fields: "/etc/filebeat/fields.yml"
 
 setup:
   kibana:
     host: "{{kibana_hosts}}:5601"
-
-setup.template.name: "filebeat"
-setup.template.fields: "fields.yml"
-setup.template.overwrite: true
