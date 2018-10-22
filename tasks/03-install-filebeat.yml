@@ -27,7 +27,7 @@
 - name: load template
   command: "{{item}}"
   with_items:
-    - filebeat setup --template -E output.logstash.enabled=false -E 'output.filebeat.hosts=["{{elk_host}}:9200"]'
+    - filebeat setup -e
     - filebeat setup --dashboards
     - systemctl enable filebeat
     - systemctl start filebeat

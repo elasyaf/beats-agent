@@ -28,7 +28,7 @@
 - name: load template
   command: "{{item}}"
   with_items:
-    - metricbeat setup --template -E output.logstash.enabled=false -E 'output.metricbeat.hosts=["{{elk_host}}:9200"]'
+    - metricbeat setup -e
     - metricbeat setup --dashboards
     - systemctl enable metricbeat
     - systemctl start metricbeat

@@ -27,7 +27,7 @@
 - name: load template
   command: "{{item}}"
   with_items:
-    - packetbeat setup --template -E output.logstash.enabled=false -E 'output.packetbeat.hosts=["{{elk_host}}:9200"]'
+    - packetbeat setup -e
     - packetbeat setup --dashboards
     - systemctl enable packetbeat
     - systemctl start packetbeat
